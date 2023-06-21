@@ -1,0 +1,13 @@
+[workspace]
+members = [
+  "lib/proto",
+  "guest-runner",
+  "host-controller",
+]
+
+[workspace.dependencies]
+prost = { version = "0.11" }
+tokio = { version = "1.28.2", features = ["full"] }
+tokio-vsock = { version = "0.4.0", features = ["tonic-conn"] }
+tonic = { version = "0.8.3" }
+tonic-build = { version = "0.8.3" }
