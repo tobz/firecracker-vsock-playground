@@ -1,6 +1,4 @@
-#!/usr/bin/bash
-
-set -x
+#!/usr/bin/env bash
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 BIN_DIR="${SCRIPT_DIR}/bin"
@@ -11,8 +9,19 @@ KERNEL="${OUTPUT_DIR}/vmlinux-5.10.bin"
 TARGET="$(uname -m)"
 FC_VERSION="v1.3.3"
 FC_BIN="${BIN_DIR}/firecracker"
-API_SOCKET="/tmp/fc-firesmacker-api.sock"
-VSOCK_SOCKET="/tmp/fc-firesmacker-vsock.sock"
+API_SOCKET="${TMP_DIR}/fc-firesmacker-api.sock"
+VSOCK_SOCKET="${TMP_DIR}/fc-firesmacker-vsock.sock"
+PID_FILE="${TMP_DIR}/fc-firesmacker.pid"
+
+# Clean up any existing instance of our Firesmacker test, including Firecracker
+# itself if it's still running.
+rm -f "${API_SOCKET}" "${VSOCK_SOCKET}"
+
+if [ -f "${PID_FILE}" ]; then
+  old_pid=$(cat $PID_FILE)
+  pkill -F "${PID_FILE}" && echo "Killed old Firecracker process (pid=$old_pid)"
+  rm -f "${PID_FILE}"
+fi
 
 download_firecracker() {
     TMP_FOLDER="${TMP_DIR}/firecracker"
@@ -30,7 +39,6 @@ download_firecracker() {
     rm "${TMP_ARCHIVE}"
 }
 
-API_SOCKET="/tmp/firecracker.sock"
 CURL=(curl --silent --show-error --header "Content-Type: application/json" --unix-socket "${API_SOCKET}" --write-out "HTTP %{http_code}")
 
 curl_put() {
@@ -89,8 +97,8 @@ curl_put() {
 }
 
 # Make sure the log and metrics files exist.
-logfile="/tmp/fc-firesmacker-log"
-metricsfile="/tmp/fc-firesmacker-metrics"
+logfile="${TMP_DIR}/fc-firesmacker-log"
+metricsfile="${TMP_DIR}/fc-firesmacker-metrics"
 
 touch "${logfile}"
 touch "${metricsfile}"
@@ -100,6 +108,11 @@ KERNEL_BOOT_ARGS="panic=1 pci=off nomodules reboot=k tsc=reliable quiet console=
 # Start the Firecracker API server so we can configure the microVM.
 rm -f "${API_SOCKET}"
 "${FC_BIN}" --api-sock "${API_SOCKET}" --id firesmacker --boot-timer >> "${logfile}" &
+
+fc_pid="$!"
+echo "${fc_pid}" > "${PID_FILE}"
+
+echo "Firecracker running (pid=$fc_pid)"
 
 sleep 0.015s
 
@@ -148,3 +161,5 @@ EOF
 curl_put '/actions' <<EOF
 { "action_type": "InstanceStart" }
 EOF
+
+echo "Firecracker configured and InstanceStart triggered."

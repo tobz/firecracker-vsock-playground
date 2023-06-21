@@ -11,7 +11,8 @@ use tower::service_fn;
 
 async fn build_guest_vsock_connection(_: Uri) -> io::Result<UnixStream> {
     // Connect to the host-side Unix socket and tell Firecracker to connect to port 50051.
-    let path = "/tmp/fc-firesmacker-vsock.sock";
+    let path = std::env::var("VSOCK_PATH")
+        .expect("`VSOCK_PATH` environment variable must be set to the VSOCK socket file path");
     let mut stream = UnixStream::connect(path).await?;
     stream.write_all(b"CONNECT 50051\n").await?;
 
