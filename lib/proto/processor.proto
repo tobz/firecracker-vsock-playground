@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package processor;
+
+service Processor {
+  rpc Execute (ExecuteRequest) returns (ExecuteReply) {}
+}
+
+message ExecuteRequest {
+  string command = 1;
+}
+
+message ExecuteReply {
+  int32 status = 1;
+  string stdout = 2;
+  string stderr = 3;
+}

@@ -1,0 +1,10 @@
+[package]
+name = "host-controller"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+proto = { path = "../lib/proto" }
+tokio = { workspace = true }
+tonic = { workspace = true }
+tower = { version = "0.4" }

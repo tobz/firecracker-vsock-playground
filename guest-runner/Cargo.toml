@@ -1,0 +1,10 @@
+[package]
+name = "guest-runner"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+proto = { path = "../lib/proto" }
+tokio = { workspace = true }
+tokio-vsock = { workspace = true }
+tonic = { workspace = true }
